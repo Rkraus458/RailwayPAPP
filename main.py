@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🚀 Python Practice App is live on Railway!"
+    return "Python Practice App!"
 
 if __name__ == "__main__":
     # Railway sets a PORT environment variable; we must use it
