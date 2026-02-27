@@ -14,12 +14,11 @@
 <form class="search-form" method="GET" action="{{ url_for('index') }}">
   <div class="search-bar">
     <div class="search-bar__input-wrap">
-      <span class="search-bar__icon">🔍</span>
       <input
         type="text"
         name="search"
         value="{{ search }}"
-        placeholder="Search recipes, ingredients…"
+        placeholder="Search recipes, ingredients..."
         autocomplete="off"
       />
     </div>
@@ -44,7 +43,7 @@
       <a
         href="{{ url_for('index', search=search, category=cat) }}"
         class="pill {% if active_category == cat %}pill--active{% endif %}"
-      >{{ category_icons.get(cat, '🍽️') }} {{ cat }}</a>
+      >{{ cat }}</a>
     {% endfor %}
   </div>
 {% endif %}
@@ -56,25 +55,23 @@
       <a href="{{ url_for('recipe_detail', id=recipe.id) }}" class="card">
 
         <!-- Image / Placeholder -->
-        <div class="card__image" data-emoji="{{ category_icons.get(recipe.category, '🍽️') }}">
+        <div class="card__image">
           {% if recipe.image_url %}
             <img
               src="{{ recipe.image_url }}"
               alt="{{ recipe.title }}"
               loading="lazy"
-              onerror="var p=this.parentElement; p.innerHTML='<div class=&quot;card__placeholder&quot;>'+p.dataset.emoji+'</div>'"
+              onerror="this.style.display='none';"
             />
           {% else %}
-            <div class="card__placeholder">{{ category_icons.get(recipe.category, '🍽️') }}</div>
+            <div class="card__placeholder">{{ recipe.category or 'Recipe' }}</div>
           {% endif %}
         </div>
 
         <!-- Body -->
         <div class="card__body">
           {% if recipe.category %}
-            <span class="card__badge">
-              {{ category_icons.get(recipe.category, '') }} {{ recipe.category }}
-            </span>
+            <span class="card__badge">{{ recipe.category }}</span>
           {% endif %}
 
           <h3 class="card__title">{{ recipe.title }}</h3>
@@ -85,10 +82,10 @@
 
           <div class="card__meta">
             {% if recipe.total_time %}
-              <span>⏱ {{ recipe.total_time }} min</span>
+              <span>{{ recipe.total_time }} min</span>
             {% endif %}
             {% if recipe.servings %}
-              <span>👥 {{ recipe.servings }}</span>
+              <span>{{ recipe.servings }} servings</span>
             {% endif %}
             <span>{{ recipe.ingredient_list | length }} ingredients</span>
           </div>
@@ -101,7 +98,6 @@
 {% else %}
   <!-- Empty State -->
   <div class="empty-state">
-    <div class="empty-state__icon">🍳</div>
     <h3>
       {% if search or active_category %}No recipes found{% else %}Your cookbook is empty{% endif %}
     </h3>
