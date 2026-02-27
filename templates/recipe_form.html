@@ -39,7 +39,7 @@
 
     <div class="form-group">
       <label for="description">Description</label>
-      <textarea id="description" name="description" rows="3" placeholder="A short description of the dish…">{{ recipe.description if recipe else '' }}</textarea>
+      <textarea id="description" name="description" rows="3" placeholder="A short description of the dish...">{{ recipe.description if recipe else '' }}</textarea>
     </div>
 
     <div class="form-group">
@@ -91,7 +91,7 @@
     <div class="form-group">
       <label for="ingredients">Ingredients</label>
       <textarea id="ingredients" name="ingredients" rows="9"
-        placeholder="2 cups all-purpose flour&#10;1 cup sugar&#10;3 large eggs&#10;1 tsp vanilla extract&#10;…">{{ recipe.ingredients if recipe else '' }}</textarea>
+        placeholder="2 cups all-purpose flour&#10;1 cup sugar&#10;3 large eggs&#10;1 tsp vanilla extract&#10;...">{{ recipe.ingredients if recipe else '' }}</textarea>
       <small>One ingredient per line — e.g. "2 cups flour"</small>
     </div>
   </div>
@@ -102,7 +102,7 @@
     <div class="form-group">
       <label for="instructions">Steps</label>
       <textarea id="instructions" name="instructions" rows="11"
-        placeholder="Preheat the oven to 375°F.&#10;Mix the dry ingredients together in a bowl.&#10;Add eggs and butter, mix until smooth.&#10;…">{{ recipe.instructions if recipe else '' }}</textarea>
+        placeholder="Preheat the oven to 375F.&#10;Mix the dry ingredients together in a bowl.&#10;Add eggs and butter, mix until smooth.&#10;...">{{ recipe.instructions if recipe else '' }}</textarea>
       <small>One step per line — they will be numbered automatically.</small>
     </div>
   </div>
@@ -110,7 +110,7 @@
   <!-- Actions -->
   <div class="form-actions">
     <button type="submit" class="btn btn--primary btn--lg">
-      {{ '💾 Save Changes' if recipe else '✨ Add Recipe' }}
+      {{ 'Save Changes' if recipe else 'Add Recipe' }}
     </button>
     <a href="{{ url_for('recipe_detail', id=recipe.id) if recipe else url_for('index') }}"
        class="btn btn--ghost btn--lg">Cancel</a>
