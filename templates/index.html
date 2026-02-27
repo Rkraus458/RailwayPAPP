@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}CookBook — My Recipes{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <h1>My Recipes</h1>
+  <p>{{ recipes | length }} recipe{{ 's' if recipes | length != 1 else '' }} in your collection</p>
+</div>
+
+<!-- Search -->
+<form class="search-form" method="GET" action="{{ url_for('index') }}">
+  <div class="search-bar">
+    <div class="search-bar__input-wrap">
+      <span class="search-bar__icon">🔍</span>
+      <input
+        type="text"
+        name="search"
+        value="{{ search }}"
+        placeholder="Search recipes, ingredients…"
+        autocomplete="off"
+      />
+    </div>
+    {% if active_category %}
+      <input type="hidden" name="category" value="{{ active_category }}" />
+    {% endif %}
+    <button type="submit" class="btn btn--primary">Search</button>
+    {% if search or active_category %}
+      <a href="{{ url_for('index') }}" class="btn btn--ghost">Clear</a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Category Pills -->
+{% if categories %}
+  <div class="category-filters">
+    <a
+      href="{{ url_for('index', search=search) }}"
+      class="pill {% if not active_category %}pill--active{% endif %}"
+    >All</a>
+    {% for cat in categories %}
+      <a
+        href="{{ url_for('index', search=search, category=cat) }}"
+        class="pill {% if active_category == cat %}pill--active{% endif %}"
+      >{{ category_icons.get(cat, '🍽️') }} {{ cat }}</a>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- Recipe Grid -->
+{% if recipes %}
+  <div class="recipe-grid">
+    {% for recipe in recipes %}
+      <a href="{{ url_for('recipe_detail', id=recipe.id) }}" class="card">
+
+        <!-- Image / Placeholder -->
+        <div class="card__image">
+          {% if recipe.image_url %}
+            <img
+              src="{{ recipe.image_url }}"
+              alt="{{ recipe.title }}"
+              loading="lazy"
+              onerror="this.parentElement.innerHTML='<div class=\'card__placeholder\'>{{ category_icons.get(recipe.category, \'🍽️\') }}</div>'"
+            />
+          {% else %}
+            <div class="card__placeholder">{{ category_icons.get(recipe.category, '🍽️') }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Body -->
+        <div class="card__body">
+          {% if recipe.category %}
+            <span class="card__badge">
+              {{ category_icons.get(recipe.category, '') }} {{ recipe.category }}
+            </span>
+          {% endif %}
+
+          <h3 class="card__title">{{ recipe.title }}</h3>
+
+          {% if recipe.description %}
+            <p class="card__desc">{{ recipe.description }}</p>
+          {% endif %}
+
+          <div class="card__meta">
+            {% if recipe.total_time %}
+              <span>⏱ {{ recipe.total_time }} min</span>
+            {% endif %}
+            {% if recipe.servings %}
+              <span>👥 {{ recipe.servings }}</span>
+            {% endif %}
+            <span>{{ recipe.ingredient_list | length }} ingredients</span>
+          </div>
+        </div>
+
+      </a>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-state__icon">🍳</div>
+    <h3>
+      {% if search or active_category %}No recipes found{% else %}Your cookbook is empty{% endif %}
+    </h3>
+    <p>
+      {% if search or active_category %}
+        Try a different search or clear the filters.
+      {% else %}
+        Start building your collection — add your first recipe!
+      {% endif %}
+    </p>
+    {% if search or active_category %}
+      <a href="{{ url_for('index') }}" class="btn btn--ghost">View All Recipes</a>
+    {% else %}
+      <a href="{{ url_for('new_recipe') }}" class="btn btn--primary btn--lg">Add Your First Recipe</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endblock %}

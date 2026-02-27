@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} — CookBook{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb">
+  <a href="{{ url_for('index') }}">Home</a>
+  {% if recipe %}
+    <span class="breadcrumb__sep">›</span>
+    <a href="{{ url_for('recipe_detail', id=recipe.id) }}">{{ recipe.title }}</a>
+  {% endif %}
+  <span class="breadcrumb__sep">›</span>
+  <span>{{ action }}</span>
+</nav>
+
+<div class="page-header">
+  <h1>{{ action }}</h1>
+</div>
+
+<form class="form-layout" method="POST">
+
+  <!-- Basic Info -->
+  <div class="form-section">
+    <h2>Basic Info</h2>
+
+    <div class="form-group">
+      <label for="title">Recipe Title <span style="color:var(--color-primary)">*</span></label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        required
+        placeholder="e.g. Grandma's Apple Pie"
+        value="{{ recipe.title if recipe else '' }}"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="3" placeholder="A short description of the dish…">{{ recipe.description if recipe else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category</label>
+      <select id="category" name="category">
+        {% for cat in categories %}
+          <option value="{{ cat }}" {{ 'selected' if recipe and recipe.category == cat }}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="image_url">Image URL <span style="color:var(--color-subtle);font-weight:400">(optional)</span></label>
+      <input
+        type="url"
+        id="image_url"
+        name="image_url"
+        placeholder="https://example.com/photo.jpg"
+        value="{{ recipe.image_url if recipe and recipe.image_url else '' }}"
+      />
+    </div>
+  </div>
+
+  <!-- Time & Servings -->
+  <div class="form-section">
+    <h2>Time &amp; Servings</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="prep_time">Prep Time (min)</label>
+        <input type="number" id="prep_time" name="prep_time" min="0" placeholder="15"
+               value="{{ recipe.prep_time if recipe else '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="cook_time">Cook Time (min)</label>
+        <input type="number" id="cook_time" name="cook_time" min="0" placeholder="30"
+               value="{{ recipe.cook_time if recipe else '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="servings">Servings</label>
+        <input type="number" id="servings" name="servings" min="1" placeholder="4"
+               value="{{ recipe.servings if recipe else '' }}" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Ingredients -->
+  <div class="form-section">
+    <h2>Ingredients</h2>
+    <div class="form-group">
+      <label for="ingredients">Ingredients</label>
+      <textarea id="ingredients" name="ingredients" rows="9"
+        placeholder="2 cups all-purpose flour&#10;1 cup sugar&#10;3 large eggs&#10;1 tsp vanilla extract&#10;…">{{ recipe.ingredients if recipe else '' }}</textarea>
+      <small>One ingredient per line — e.g. "2 cups flour"</small>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="form-section">
+    <h2>Instructions</h2>
+    <div class="form-group">
+      <label for="instructions">Steps</label>
+      <textarea id="instructions" name="instructions" rows="11"
+        placeholder="Preheat the oven to 375°F.&#10;Mix the dry ingredients together in a bowl.&#10;Add eggs and butter, mix until smooth.&#10;…">{{ recipe.instructions if recipe else '' }}</textarea>
+      <small>One step per line — they will be numbered automatically.</small>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="form-actions">
+    <button type="submit" class="btn btn--primary btn--lg">
+      {{ '💾 Save Changes' if recipe else '✨ Add Recipe' }}
+    </button>
+    <a href="{{ url_for('recipe_detail', id=recipe.id) if recipe else url_for('index') }}"
+       class="btn btn--ghost btn--lg">Cancel</a>
+  </div>
+
+</form>
+
+{% endblock %}
