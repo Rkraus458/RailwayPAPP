@@ -56,13 +56,13 @@
       <a href="{{ url_for('recipe_detail', id=recipe.id) }}" class="card">
 
         <!-- Image / Placeholder -->
-        <div class="card__image">
+        <div class="card__image" data-emoji="{{ category_icons.get(recipe.category, '🍽️') }}">
           {% if recipe.image_url %}
             <img
               src="{{ recipe.image_url }}"
               alt="{{ recipe.title }}"
               loading="lazy"
-              onerror="this.parentElement.innerHTML='<div class=\'card__placeholder\'>{{ category_icons.get(recipe.category, \'🍽️\') }}</div>'"
+              onerror="var p=this.parentElement; p.innerHTML='<div class=&quot;card__placeholder&quot;>'+p.dataset.emoji+'</div>'"
             />
           {% else %}
             <div class="card__placeholder">{{ category_icons.get(recipe.category, '🍽️') }}</div>
