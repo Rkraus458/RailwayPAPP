@@ -50,19 +50,19 @@ class Recipe(db.Model):
 
 
 CATEGORY_ICONS = {
-    'Breakfast':  '🍳',
-    'Lunch':      '🥗',
-    'Dinner':     '🍝',
-    'Dessert':    '🍰',
-    'Snack':      '🍿',
-    'Soup':       '🍵',
-    'Salad':      '🥙',
-    'Bread':      '🍞',
-    'Drinks':     '🥤',
-    'Vegetarian': '🥦',
-    'Seafood':    '🐟',
-    'Chicken':    '🍗',
-    'Other':      '🍽️',
+    'Breakfast':  '',
+    'Lunch':      '',
+    'Dinner':     '',
+    'Dessert':    '',
+    'Snack':      '',
+    'Soup':       '',
+    'Salad':      '',
+    'Bread':      '',
+    'Drinks':     '',
+    'Vegetarian': '',
+    'Seafood':    '',
+    'Chicken':    '',
+    'Other':      '',
 }
 
 CATEGORIES = list(CATEGORY_ICONS.keys())
