@@ -21,8 +21,9 @@
         class="detail-image"
         src="{{ recipe.image_url }}"
         alt="{{ recipe.title }}"
-        onerror="this.outerHTML='<div class=\'detail-placeholder\'>{{ category_icons.get(recipe.category, \'🍽️\') }}</div>'"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
       />
+      <div class="detail-placeholder" style="display:none">{{ category_icons.get(recipe.category, '🍽️') }}</div>
     {% else %}
       <div class="detail-placeholder">{{ category_icons.get(recipe.category, '🍽️') }}</div>
     {% endif %}
