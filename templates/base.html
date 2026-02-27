@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
 </head>
 <body>
 
@@ -16,7 +15,6 @@
   <nav class="nav">
     <div class="nav__inner">
       <a href="{{ url_for('index') }}" class="nav__logo">
-        <span class="nav__logo-icon">📖</span>
         <span>CookBook</span>
       </a>
       <a href="{{ url_for('new_recipe') }}" class="btn btn--primary">
@@ -33,7 +31,7 @@
           {% for category, message in messages %}
             <div class="flash flash--{{ category }}">
               <span>{{ message }}</span>
-              <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>
+              <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">x</button>
             </div>
           {% endfor %}
         </div>
@@ -50,7 +48,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>🍽️ CookBook — Your Personal Recipe Collection</p>
+    <p>CookBook &mdash; Your Personal Recipe Collection</p>
   </footer>
 
 </body>
