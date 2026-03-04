@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, jsonify, request, abort
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
@@ -68,8 +68,66 @@ CATEGORY_ICONS = {
 CATEGORIES = list(CATEGORY_ICONS.keys())
 
 
-@app.route('/')
-def index():
+API_KEY = os.environ.get('API_KEY', '')
+
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///cookbook_api.db')
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+class Recipe(db.Model):
+    __tablename__ = 'recipes'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    title        = db.Column(db.String(200), nullable=False)
+    description  = db.Column(db.Text)
+    category     = db.Column(db.String(50))
+    prep_time    = db.Column(db.Integer)
+    cook_time    = db.Column(db.Integer)
+    servings     = db.Column(db.Integer)
+    ingredients  = db.Column(db.Text)
+    instructions = db.Column(db.Text)
+    image_url    = db.Column(db.String(500))
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id':           self.id,
+            'title':        self.title,
+            'description':  self.description,
+            'category':     self.category,
+            'prep_time':    self.prep_time,
+            'cook_time':    self.cook_time,
+            'servings':     self.servings,
+            'ingredients':  self.ingredients,
+            'instructions': self.instructions,
+            'image_url':    self.image_url,
+            'created_at':   self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+@app.before_request
+def require_api_key():
+    if request.path == '/health':
+        return
+    if not API_KEY:
+        return
+    if request.headers.get('X-API-Key') != API_KEY:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok'})
+
+
+@app.route('/api/recipes', methods=['GET'])
+def list_recipes():
     search   = request.args.get('search', '')
     category = request.args.get('category', '')
 
@@ -89,76 +147,80 @@ def index():
     all_categories = db.session.query(Recipe.category).distinct().all()
     all_categories = sorted([c[0] for c in all_categories if c[0]])
 
-    return render_template(
-        'index.html',
-        recipes=recipes,
-        categories=all_categories,
-        category_icons=CATEGORY_ICONS,
-        search=search,
-        active_category=category,
+    return jsonify({
+        'recipes':    [r.to_dict() for r in recipes],
+        'categories': all_categories,
+    })
+
+
+@app.route('/api/recipes/<int:id>', methods=['GET'])
+def get_recipe(id):
+    recipe = db.session.get(Recipe, id)
+    if recipe is None:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify(recipe.to_dict())
+
+
+@app.route('/api/recipes', methods=['POST'])
+def create_recipe():
+    data = request.get_json(force=True)
+    if not data or not data.get('title'):
+        return jsonify({'error': 'title is required'}), 400
+
+    recipe = Recipe(
+        title        = data['title'].strip(),
+        description  = data.get('description', '').strip() or None,
+        category     = data.get('category', 'Other'),
+        prep_time    = data.get('prep_time'),
+        cook_time    = data.get('cook_time'),
+        servings     = data.get('servings'),
+        ingredients  = data.get('ingredients', '').strip() or None,
+        instructions = data.get('instructions', '').strip() or None,
+        image_url    = data.get('image_url', '').strip() or None,
     )
+    db.session.add(recipe)
+    db.session.commit()
+    return jsonify(recipe.to_dict()), 201
 
 
-@app.route('/recipe/new', methods=['GET', 'POST'])
-def new_recipe():
-    if request.method == 'POST':
-        recipe = Recipe(
-            title        = request.form['title'].strip(),
-            description  = request.form.get('description', '').strip() or None,
-            category     = request.form.get('category', 'Other'),
-            prep_time    = int(request.form['prep_time'])  if request.form.get('prep_time')  else None,
-            cook_time    = int(request.form['cook_time'])  if request.form.get('cook_time')  else None,
-            servings     = int(request.form['servings'])   if request.form.get('servings')   else None,
-            ingredients  = request.form.get('ingredients',  '').strip() or None,
-            instructions = request.form.get('instructions', '').strip() or None,
-            image_url    = request.form.get('image_url',    '').strip() or None,
-        )
-        db.session.add(recipe)
-        db.session.commit()
-        flash('Recipe added successfully!', 'success')
-        return redirect(url_for('recipe_detail', id=recipe.id))
+@app.route('/api/recipes/<int:id>', methods=['PUT'])
+def update_recipe(id):
+    recipe = db.session.get(Recipe, id)
+    if recipe is None:
+        return jsonify({'error': 'Not found'}), 404
 
-    return render_template('recipe_form.html', recipe=None, categories=CATEGORIES, action='Add New Recipe')
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
 
-
-@app.route('/recipe/<int:id>')
-def recipe_detail(id):
-    recipe = Recipe.query.get_or_404(id)
-    return render_template('recipe_detail.html', recipe=recipe, category_icons=CATEGORY_ICONS)
+    recipe.title        = data.get('title', recipe.title).strip()
+    recipe.description  = data.get('description', recipe.description or '').strip() or None
+    recipe.category     = data.get('category', recipe.category)
+    recipe.prep_time    = data.get('prep_time', recipe.prep_time)
+    recipe.cook_time    = data.get('cook_time', recipe.cook_time)
+    recipe.servings     = data.get('servings', recipe.servings)
+    recipe.ingredients  = data.get('ingredients', recipe.ingredients or '').strip() or None
+    recipe.instructions = data.get('instructions', recipe.instructions or '').strip() or None
+    recipe.image_url    = data.get('image_url', recipe.image_url or '').strip() or None
+    db.session.commit()
+    return jsonify(recipe.to_dict())
 
 
-@app.route('/recipe/<int:id>/edit', methods=['GET', 'POST'])
-def edit_recipe(id):
-    recipe = Recipe.query.get_or_404(id)
-    if request.method == 'POST':
-        recipe.title        = request.form['title'].strip()
-        recipe.description  = request.form.get('description', '').strip() or None
-        recipe.category     = request.form.get('category', 'Other')
-        recipe.prep_time    = int(request.form['prep_time'])  if request.form.get('prep_time')  else None
-        recipe.cook_time    = int(request.form['cook_time'])  if request.form.get('cook_time')  else None
-        recipe.servings     = int(request.form['servings'])   if request.form.get('servings')   else None
-        recipe.ingredients  = request.form.get('ingredients',  '').strip() or None
-        recipe.instructions = request.form.get('instructions', '').strip() or None
-        recipe.image_url    = request.form.get('image_url',    '').strip() or None
-        db.session.commit()
-        flash('Recipe updated!', 'success')
-        return redirect(url_for('recipe_detail', id=recipe.id))
-
-    return render_template('recipe_form.html', recipe=recipe, categories=CATEGORIES, action='Edit Recipe')
-
-
-@app.route('/recipe/<int:id>/delete', methods=['POST'])
+@app.route('/api/recipes/<int:id>', methods=['DELETE'])
 def delete_recipe(id):
-    recipe = Recipe.query.get_or_404(id)
+    recipe = db.session.get(Recipe, id)
+    if recipe is None:
+        return jsonify({'error': 'Not found'}), 404
     db.session.delete(recipe)
     db.session.commit()
-    flash('Recipe deleted.', 'info')
-    return redirect(url_for('index'))
+    return jsonify({'message': 'Recipe deleted'})
 
 
-@app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
+@app.route('/api/categories', methods=['GET'])
+def list_categories():
+    rows = db.session.query(Recipe.category).distinct().all()
+    categories = sorted([r[0] for r in rows if r[0]])
+    return jsonify({'categories': categories})
 
 
 def seed_sample_recipes():
@@ -231,6 +293,6 @@ with app.app_context():
     seed_sample_recipes()
 
 if __name__ == '__main__':
-    port  = int(os.environ.get('PORT', 5000))
+    port  = int(os.environ.get('PORT', 5001))
     debug = os.environ.get('DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=port, debug=debug)
