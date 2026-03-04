@@ -4,6 +4,69 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Railway provides DATABASE_URL for PostgreSQL; fall back to SQLite locally
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///cookbook.db')
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+class Recipe(db.Model):
+    __tablename__ = 'recipes'
+
+    id           = db.Column(db.Integer, primary_key=True)
+    title        = db.Column(db.String(200), nullable=False)
+    description  = db.Column(db.Text)
+    category     = db.Column(db.String(50))
+    prep_time    = db.Column(db.Integer)   # minutes
+    cook_time    = db.Column(db.Integer)   # minutes
+    servings     = db.Column(db.Integer)
+    ingredients  = db.Column(db.Text)      # newline-separated
+    instructions = db.Column(db.Text)      # newline-separated steps
+    image_url    = db.Column(db.String(500))
+    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def ingredient_list(self):
+        if self.ingredients:
+            return [i.strip() for i in self.ingredients.strip().split('\n') if i.strip()]
+        return []
+
+    @property
+    def instruction_list(self):
+        if self.instructions:
+            return [i.strip() for i in self.instructions.strip().split('\n') if i.strip()]
+        return []
+
+    @property
+    def total_time(self):
+        return (self.prep_time or 0) + (self.cook_time or 0)
+
+
+CATEGORY_ICONS = {
+    'Breakfast':  '',
+    'Lunch':      '',
+    'Dinner':     '',
+    'Dessert':    '',
+    'Snack':      '',
+    'Soup':       '',
+    'Salad':      '',
+    'Bread':      '',
+    'Drinks':     '',
+    'Vegetarian': '',
+    'Seafood':    '',
+    'Chicken':    '',
+    'Other':      '',
+}
+
+CATEGORIES = list(CATEGORY_ICONS.keys())
+
 
 API_KEY = os.environ.get('API_KEY', '')
 
